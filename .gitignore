@@ -1,0 +1,8 @@
+cat << 'EOF' > .gitignore
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+data/
+*.csv
+EOF

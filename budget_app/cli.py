@@ -1,12 +1,11 @@
 import argparse
-from typing import Optional
+import sys
 from budget_app.storage import StorageManager
 from budget_app.services import BudgetService
 from budget_app.decorators import handle_cli_errors, BudgetAppError
 
 
 def format_tx_line(tx) -> str:
-    """터미널 가독성을 위한 문자열 패딩 포맷터 (보너스 과제 3 충족)"""
     tags_str = f"[{', '.join(tx.tags)}]" if tx.tags else ""
     return f"{tx.id:<9} | {tx.date} | {tx.type:<7} | {tx.category:<10} | {tx.amount:>8}원 | {tx.memo:<12} {tags_str}"
 
@@ -24,11 +23,11 @@ def run_cli():
     subparsers.add_parser("add", help="거래 추가 (대화형 입력)")
 
     # 2. list
-    list_p = subparsers.add_parser("list", help="거래 목록 최신순 조회")
+    list_p = subparsers.add_parser("list", help="거래 목록 최신순 조회 (스트리밍 Top-N)")
     list_p.add_argument("--limit", type=int, default=10, help="출력할 최대 건수 (기본값: 10)")
 
     # 3. search
-    search_p = subparsers.add_parser("search", help="거래 조건 검색")
+    search_p = subparsers.add_parser("search", help="거래 조건 검색 (제너레이터 지연 로드)")
     search_p.add_argument("--from", dest="from_date", help="시작 날짜 (YYYY-MM-DD)")
     search_p.add_argument("--to", dest="to_date", help="종료 날짜 (YYYY-MM-DD)")
     search_p.add_argument("--category", help="카테고리")
@@ -53,11 +52,12 @@ def run_cli():
     cat_sub = cat_p.add_subparsers(dest="cat_action")
     cat_sub.add_parser("list", help="카테고리 목록 조회")
     cat_add = cat_sub.add_parser("add", help="카테고리 추가")
-    cat_add.add_argument("name", nargs="?", help="추가할 카테고리명 (생략 시 대화형)")
+    cat_add.add_argument("name", nargs="?", help="추가할 카테고리명")
     cat_rm = cat_sub.add_parser("remove", help="카테고리 삭제")
     cat_rm.add_argument("name", help="삭제할 카테고리명")
+    cat_rm.add_argument("--replace-with", help="삭제 시 기존 내역을 일괄 전환할 새 카테고리명")
 
-    # 7. update (안 A: 옵션 기반)
+    # 7. update
     update_p = subparsers.add_parser("update", help="거래 내역 수정")
     update_p.add_argument("--id", required=True, help="수정할 거래 ID")
     update_p.add_argument("--date", help="새 날짜 (YYYY-MM-DD)")
@@ -80,6 +80,7 @@ def run_cli():
 
     import_p = subparsers.add_parser("import", help="CSV 거래 내역 가져오기")
     import_p.add_argument("--from", dest="from_file", required=True, help="가져올 CSV 파일 경로")
+    import_p.add_argument("--strict", action="store_true", help="오류 행 발생 시 전체 롤백 모드")
 
     args = parser.parse_args()
     if not args.command:
@@ -89,7 +90,6 @@ def run_cli():
     storage = StorageManager(args.data_dir)
     service = BudgetService(storage)
 
-    # --- 명령어 분기 처리 ---
     if args.command == "add":
         print("--- 거래 내역 추가 (대화형) ---")
         date = input("날짜(YYYY-MM-DD): ").strip()
@@ -116,19 +116,19 @@ def run_cli():
             print(format_tx_line(tx))
 
     elif args.command == "search":
-        txs = service.search_transactions(
+        found = False
+        for tx in service.search_transactions(
             from_date=args.from_date,
             to_date=args.to_date,
             category=args.category,
             type_=args.type,
             query=args.q,
             tag=args.tag,
-        )
-        if not txs:
-            print("검색 조건과 일치하는 내역이 없습니다.")
-            return
-        for tx in txs:
+        ):
             print(format_tx_line(tx))
+            found = True
+        if not found:
+            print("검색 조건과 일치하는 내역이 없습니다.")
 
     elif args.command == "summary":
         res = service.get_summary(args.month, top_n=args.top)
@@ -143,7 +143,7 @@ def run_cli():
         if res["budget"] is not None:
             status = f"예산: {res['budget']:,}원 (사용률 {res['usage_rate']:.1f}%)"
             if res["is_over"]:
-                status += " [경고: 예산 초과!]"
+                status += " [경고: 예산 초과! 콘솔 알림]"
             print(status)
 
         print(f"지출 TOP {len(res['top_categories'])}")
@@ -171,7 +171,7 @@ def run_cli():
             service.add_category(name)
             print(f"[저장 완료] category={name}")
         elif args.cat_action == "remove":
-            service.remove_category(args.name)
+            service.remove_category(args.name, replace_with=args.replace_with)
             print(f"[삭제 완료] category={args.name}")
         else:
             parser.parse_args(["category", "--help"])
@@ -203,5 +203,5 @@ def run_cli():
         print(f"[완료] {args.out} ({cnt} records)")
 
     elif args.command == "import":
-        imported, skipped = service.import_from_csv(args.from_file)
+        imported, skipped = service.import_from_csv(args.from_file, strict=args.strict)
         print(f"[완료] imported = {imported}, skipped = {skipped}")

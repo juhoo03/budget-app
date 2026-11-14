@@ -221,7 +221,7 @@ python -m budget_app search --category 식비
 
 확인 명령어:
 ```bash
-BUDGET_DEBUG=1 python -m budget_app list
+BUDGET_DEBUG=1 python3 -m budget_app list
 ```
 
 출력 예시:
@@ -282,10 +282,10 @@ CSV 가져오기는 두 가지 모드를 제공합니다.
 
 ```bash
 # 유효한 행만 가져오기
-python -m budget_app import --from data.csv
+python3 -m budget_app import --from data.csv
 
 # 검증 오류가 하나라도 있으면 전체 가져오기 취소
-python -m budget_app import --from data.csv --strict
+python3 -m budget_app import --from data.csv --strict
 ```
 
 현재 구현은 CSV 전체 행을 먼저 읽고 검증한 다음 정상 행을 저장합니다. 따라서 strict 모드의 검증 실패 시에는 저장이 시작되지 않습니다. 다만 저장 단계에서 파일 시스템 오류가 발생하는 경우까지 여러 행의 저장을 하나의 원자적 트랜잭션으로 보장하는 구조는 아닙니다.
@@ -306,7 +306,7 @@ python -m budget_app import --from data.csv --strict
 다음 명령어로 테스트를 실행할 수 있습니다.
 
 ```bash
-python -m unittest discover tests
+python3 -m unittest discover tests
 ```
 
 실행 결과:

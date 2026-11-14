@@ -24,7 +24,7 @@ python -m budget_app add
 ### 전체 목록 조회 (`list`)
 최신 날짜와 ID를 기준으로 내림차순 정렬합니다.
 ```bash
-python -m budget_app list
+python3 -m budget_app list
 TX-000002 | 2026-09-05 | income  | 월급       |   100000원 | 장학금          [장학금]
 TX-000001 | 2026-09-04 | expense | 식비       |    12000원 | 점심            [점심, 외식]
 ```
@@ -32,19 +32,19 @@ TX-000001 | 2026-09-04 | expense | 식비       |    12000원 | 점심          
 ### 조건별 검색 (`search`)
 ```bash
 # 카테고리 검색
-python -m budget_app search --category 식비
+python3 -m budget_app search --category 식비
 
 # 메모 또는 태그에 '점심'이 포함된 내역 검색
-python -m budget_app search --q 점심
+python3 -m budget_app search --q 점심
 ```
 
 ### 거래 내역 수정 및 삭제 (`update`, `delete`)
 ```bash
 # 금액과 메모 수정
-python -m budget_app update --id TX-000001 --amount 15000 --memo "점심(특식)"
+python3 -m budget_app update --id TX-000001 --amount 15000 --memo "점심(특식)"
 
 # 거래 내역 삭제
-python -m budget_app delete --id TX-000001
+python3 -m budget_app delete --id TX-000001
 [삭제 완료] id=TX-000001
 ```
 
@@ -62,18 +62,18 @@ python -m budget_app delete --id TX-000001
 
 ```bash
 # 카테고리 추가
-python -m budget_app category add 교육
+python3 -m budget_app category add 교육
 
 # 카테고리 목록
-python -m budget_app category list
+python3 -m budget_app category list
 
 # 사용 중인 카테고리 삭제 시도
-python -m budget_app category remove 식비
+python3 -m budget_app category remove 식비
 [오류] 카테고리 '식비'를 사용하는 거래 내역(예: TX-000001)이 있어 삭제할 수 없습니다.
 [힌트] --replace-with <대체카테고리> 옵션을 사용해 일괄 전환하거나 관련 거래를 먼저 수정하세요.
 
 # 사용 중인 내역을 '기타'로 바꾼 뒤 카테고리 삭제
-python -m budget_app category remove 식비 --replace-with 기타
+python3 -m budget_app category remove 식비 --replace-with 기타
 [삭제 완료] category=식비
 ```
 
@@ -83,11 +83,11 @@ python -m budget_app category remove 식비 --replace-with 기타
 
 ```bash
 # 2026년 9월 예산 설정
-python -m budget_app budget set --month 2026-09 --amount 500000
+python3 -m budget_app budget set --month 2026-09 --amount 500000
 [저장 완료] 2026-09 예산 500000원
 
 # 월별 결산
-python -m budget_app summary --month 2026-09
+python3 -m budget_app summary --month 2026-09
 총 수입: 100,000원
 총 지출: 12,000원
 잔액: 88,000원
@@ -108,11 +108,11 @@ date,type,category,amount,memo,tags
 
 ```bash
 # 특정 월의 거래 내역을 CSV로 내보내기
-python -m budget_app export --out export_data.csv --month 2026-09
+python3 -m budget_app export --out export_data.csv --month 2026-09
 [완료] export_data.csv (1 records)
 
 # CSV 파일 가져오기
-python -m budget_app import --from export_data.csv
+python3 -m budget_app import --from export_data.csv
 [완료] imported = 1, skipped = 0
 ```
 
@@ -121,7 +121,7 @@ python -m budget_app import --from export_data.csv
 ## 1-6. 잘못된 입력·파일 오류 및 종료 코드
 
 ```bash
-python -m budget_app add
+python3 -m budget_app add
 날짜(YYYY-MM-DD): 2026-13-40
 [오류] 날짜 형식이 올바르지 않습니다: '2026-13-40'
 [힌트] YYYY-MM-DD 형식의 실제 달력 날짜(예: 2026-09-05)를 입력하세요.

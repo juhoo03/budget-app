@@ -153,6 +153,11 @@ budget_app/
 패키지 import 확인:
 ```bash
 python -c "import budget_app"
+성공 시 아무것도 안뜸
+
+실패시 :
+ModuleNotFoundError:
+No module named 'budget_app'
 ```
 
 ## 2-2. 클래스별 책임과 경계
